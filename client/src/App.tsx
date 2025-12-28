@@ -6,13 +6,26 @@ import { ToastContainer } from 'react-toastify';
 import { useEffect, useState } from 'react';
 import { CanvasPage } from "./pages/CanvasPage";
 import { io, Socket } from "socket.io-client";
+import { CreateRoomPage } from './pages/CreateRoomPage';
+import { RoomPage } from './pages/RoomPage';
+import { RoomContext } from './Contexts/RoomContext';
+
+export type RoomInfo = {
+  roomId: number | "Loading ...";
+  members?: { id: string, username: string }[]
+  currentDrawerId?: string;
+  turnEndsAt: number | "Loading ...";
+}
 
 const socket: Socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", { autoConnect: true });
 
 function App() {
-
-  const [joined, setJoined] = useState<boolean>(false);
-  const [roomId, setRoomId] = useState<string>("");
+  const [canDraw, setCanDraw] = useState<boolean>(false)
+  const [canType, setCanType] = useState(true);
+  const [roomInfo, setRoomInfo] = useState<RoomInfo>({
+    roomId: "Loading ...",
+    turnEndsAt: "Loading ..."
+  });
 
   useEffect(() => {
     const isLightTheme = localStorage.getItem("isLightTheme");
@@ -21,6 +34,8 @@ function App() {
     } else {
       document.documentElement.classList.remove("light");
     }
+
+    localStorage.setItem("joined", "false");
   }, []);
 
 
@@ -45,23 +60,34 @@ function App() {
       {/* All Routes */}
       <Routes>
         <Route index element={<HomePage
-          socket={socket}
-          setJoined={setJoined}
-          setRoomId={setRoomId} />} />
+          socket={socket} />} />
 
         {/* Auth routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/sign-up" element={<SignupPage />} />
 
-        <Route path="/canvas/:roomId" element={<CanvasPage
+        <Route path="/canvas/:roomId" element={<RoomContext.Provider value={{ setCanType, canType }}><CanvasPage
           socket={socket}
-          joined={joined}
-          setJoined={setJoined}
-          roomId={roomId}
-          setRoomId={setRoomId} />} />
+          setRoomInfo={setRoomInfo}
+          roomInfo={roomInfo}
+          setCanDraw={setCanDraw}
+          canDraw={canDraw}
+        /> </RoomContext.Provider>}
+        />
+
+        <Route path="/create-room" element={<RoomContext.Provider value={{ setCanType, canType }}> <CreateRoomPage
+          socket={socket}
+          roomInfo={roomInfo}
+          setRoomInfo={setRoomInfo}
+        /> </RoomContext.Provider>} />
+
+        <Route path="/room/:roomId" element={<RoomContext.Provider value={{ setCanType, canType }}> <RoomPage
+          socket={socket}
+          roomInfo={roomInfo}
+          setRoomInfo={setRoomInfo}
+        /> </RoomContext.Provider>} />
       </Routes>
     </>
   );
 }
-
 export default App

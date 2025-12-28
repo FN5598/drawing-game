@@ -3,6 +3,8 @@ export type RoomState = {
     members: string[];
     currentDrawerIndex: number;
     turnEndsAt: number | null;
-    maxPlayers: 3;
-    interval?: NodeJS.Timeout
+    maxPlayers: number;
+    turnTimeout?: NodeJS.Timeout | null;
+    isPrivate: boolean;
+    turnTime: number;
 };

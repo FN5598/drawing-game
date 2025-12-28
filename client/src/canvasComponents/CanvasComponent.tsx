@@ -2,12 +2,10 @@ import { ColorPickerComponent } from "../canvasComponents/ColorPickerComponent";
 import { useRef, useState, useEffect } from "react"
 import { Socket } from "socket.io-client";
 import transformWordToLetters from "../utils/transformWordToLetters";
-import { RoomInfo } from "../pages/CanvasPage";
+import { RoomInfo } from "../App";
 
 type CanvasComponentProps = {
     socket: Socket;
-    joined: boolean;
-    roomId: string;
     setWordToGuess: React.Dispatch<React.SetStateAction<string>>;
     wordToGuess: string;
     roomInfo: RoomInfo
@@ -29,7 +27,7 @@ interface DrawData {
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 
-export function CanvasComponent({ socket, roomId, wordToGuess, setWordToGuess, isGuessed, canDraw, timeLeft }: CanvasComponentProps) {
+export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed, canDraw, timeLeft }: CanvasComponentProps) {
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [lineWidth, setLineWidth] = useState(1);
@@ -38,6 +36,8 @@ export function CanvasComponent({ socket, roomId, wordToGuess, setWordToGuess, i
     const lastPosRef = useRef<{ x: number, y: number } | null>(null);
     const [isEraser, setIsEraser] = useState(false);
     const [colorPicker, setColorPicker] = useState(false);
+
+    const roomId = localStorage.getItem("roomId") || undefined;
 
     useEffect(() => {
 
@@ -209,7 +209,7 @@ export function CanvasComponent({ socket, roomId, wordToGuess, setWordToGuess, i
                     height: `${CANVAS_HEIGHT}px`,
                     display: 'block'
                 }}
-                className="border-8 border-gray-600 rounded-xl bg-canvas cursor-crosshair w-[800px] h-[600px] mt-4.5 "
+                className="border-8 border-gray-600 rounded-xl bg-canvas cursor-pointer w-[800px] h-[600px] mt-4.5 "
                 ref={canvasRef}
                 width={CANVAS_WIDTH}
                 height={CANVAS_HEIGHT}

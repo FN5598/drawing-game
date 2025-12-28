@@ -47,31 +47,35 @@ const io = new Server(server, {
 
 const roomWords: Map<string, string> = new Map();
 const rooms = new Map<string, RoomState>();
-const TURN_TIME = 80 * 1000;
 
 io.on('connection', (socket) => {
     console.log("New socket connected:", socket.id)
 
 
-    function startRoomTimer(roomId: string) {
-        console.log("Started room Timer");
+    function startRoomTurn(roomId: string) {
+        console.log("Started room timer");
         const room = rooms.get(roomId);
         if (!room) return;
-        if (!room.turnEndsAt) {
-            room.turnEndsAt = Date.now() + TURN_TIME;
-        }
-        if (!room) return;
-        room.interval = setInterval(() => {
-            const now = Date.now();
 
-            if (room.turnEndsAt! <= now) {
-                socket.emit("next-player")
-                room.turnEndsAt = now + TURN_TIME;
-            }
-        }, 250)
-    };
+        // Clear any existing timer
+        if (room.turnTimeout) return;
 
-    function createRoom(): RoomState {
+        const turnTime = room.turnTime
+        // Set the turn end time
+        room.turnEndsAt = Date.now() + turnTime;
+        console.log("Turn ends at:", room.turnEndsAt);
+
+        // Schedule the next turn
+        room.turnTimeout = setTimeout(() => {
+            // Emit next player
+            socket.emit("next-player");
+
+            // Start the next turn
+            startRoomTurn(roomId);
+        }, turnTime);
+    }
+
+    function createRoom(isPrivate: boolean, maxPlayers?: number, turnTime?: number): RoomState {
         const roomId = crypto.randomUUID();
 
         const room: RoomState = {
@@ -79,9 +83,13 @@ io.on('connection', (socket) => {
             members: [],
             currentDrawerIndex: 0,
             turnEndsAt: null,
-            maxPlayers: 3
+            maxPlayers: maxPlayers ?? 3,
+            isPrivate,
+            turnTimeout: null,
+            turnTime: turnTime ?? 80 * 1000
         };
 
+        console.log("Created room:", room);
         rooms.set(roomId, room);
         return room;
     }
@@ -89,7 +97,7 @@ io.on('connection', (socket) => {
 
     function findAvailableRoom(): RoomState | null {
         for (const room of rooms.values()) {
-            if (room.members.length < room.maxPlayers) {
+            if ((room.members.length < room.maxPlayers) && !room.isPrivate) {
                 return room;
             }
         }
@@ -97,29 +105,35 @@ io.on('connection', (socket) => {
     }
 
     async function joinRoom(roomId: string, socket: Socket, username: string) {
-        console.log("Join room Func called");
+        console.log("Joined user", username, "To room", roomId);
 
+        const room = rooms.get(roomId);
+        if (!room) return;
         socket.join(roomId);
+
+        if (!room?.turnEndsAt) {
+            startRoomTurn(roomId);
+        }
+
 
         socket.data.username = username;
         socket.data.roomId = roomId;
 
-        const room = rooms.get(roomId);
-        if (!room) return;
+        if (!room.members.includes(socket.id)) {
+            room.members.push(socket.id);
+        }
 
-        room.members.push(socket.id);
-        socket.emit("room-joined", roomId);
-
-        startRoomTimer(roomId);
+        const messageToEmit = room.isPrivate ? "private-room-joined" : "room-joined"
+        socket.emit(messageToEmit, roomId);
 
         if (!roomWords.has(roomId)) {
             const wordObj = await fetchRandomWord();
-            if (wordObj?.word) {
-                roomWords.set(roomId, wordObj.word);
-                console.log("New word craeted:", wordObj.word);
+            const wordToGuess = wordObj?.word;
+            if (wordToGuess) {
+                roomWords.set(roomId, wordToGuess);
+                console.log("New word created:", wordToGuess);
             }
         }
-
         const members = room.members.map(id => {
             const user = io.sockets.sockets.get(id);
             return {
@@ -129,21 +143,67 @@ io.on('connection', (socket) => {
         });
 
         const currentDrawerId = room.members[room.currentDrawerIndex];
+        const turnEndsAt = room.turnEndsAt;
+        io.to(roomId).emit("room-info", {
+            roomId,
+            members,
+            currentDrawerId,
+            turnEndsAt
+        })
+    }
+
+    socket.on("start-game", ({ roomId }: { roomId: string }) => {
+        const room = rooms.get(roomId);
+        if (!room) return;
+
+        io.to(roomId).emit("game-started", { roomId });
+
+        console.log(`Game started in room ${roomId}`);
+    })
+
+    socket.on("create-private-room", async ({ username, maxPlayers, turnTime }: { username: string, maxPlayers: number, turnTime: number }) => {
+        const isPrivate = true;
+        const room = createRoom(isPrivate, maxPlayers, turnTime);
+        if (!room) return;
+
+        await joinRoom(room.roomId, socket, username);
+
+        socket.emit("private-room-created", room.roomId);
+    })
+
+    socket.on("join-room", async ({ roomId, username }: { roomId: string, username: string }) => {
+        const room = rooms.get(roomId);
+        if (!room) return;
+
+
+        await joinRoom(roomId, socket, username);
+
+        const members = room.members.map(id => {
+            const user = io.sockets.sockets.get(id);
+            return {
+                id,
+                username: user?.data.username
+            };
+        });
+        console.log("Members:", members);
+        const currentDrawerId = room.members[room.currentDrawerIndex];
+        const turnEndsAt = room.turnEndsAt;
 
         io.to(roomId).emit("room-info", {
             roomId,
             members,
             currentDrawerId,
-            turnEndsAt: room.turnEndsAt
+            turnEndsAt
         })
-    }
+        console.log("Emitted info");
+    })
 
-    socket.on("find-room", async ({ username }: { username: string }) => {
+    socket.on("find-room", async ({ username, isPrivate }: { username: string, isPrivate: boolean }) => {
         let room = findAvailableRoom();
         console.log("Found availible rooms:", room);
 
         if (!room) {
-            room = createRoom();
+            room = createRoom(isPrivate);
             console.log("Created room:", room);
         }
 
@@ -263,7 +323,11 @@ io.on('connection', (socket) => {
         room.members = room.members.filter(id => id !== socket.id);
 
         if (room.members.length === 0) {
-            clearInterval(room.interval);
+            if (room.turnTimeout) {
+                clearTimeout(room.turnTimeout);
+                room.turnTimeout = null;
+            }
+
             rooms.delete(room.roomId);
         }
 

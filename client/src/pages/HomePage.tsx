@@ -5,11 +5,9 @@ import { toast } from "react-toastify";
 
 type HomePageProps = {
     socket: Socket;
-    setJoined: (value: boolean) => void;
-    setRoomId: (value: string) => void;
 }
 
-export function HomePage({ socket, setJoined, setRoomId }: HomePageProps) {
+export function HomePage({ socket }: HomePageProps) {
     const theme = localStorage.getItem("isLightTheme");
 
     const navigate = useNavigate();
@@ -18,15 +16,15 @@ export function HomePage({ socket, setJoined, setRoomId }: HomePageProps) {
     useEffect(() => {
         socket.on("room-joined", (roomId: string) => {
             console.log("Joined room:", roomId);
-            setRoomId(roomId);
-            setJoined(true);
             navigate(`/canvas/${roomId}`)
+            localStorage.setItem("roomId", roomId);
+            localStorage.setItem("joined", "true");
         });
 
         return () => {
             socket.off("room-joined");
         }
-    }, [socket, setJoined, setRoomId, theme, navigate]);
+    }, [socket, theme, navigate]);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
         const { name, value } = e.target;
@@ -56,9 +54,9 @@ export function HomePage({ socket, setJoined, setRoomId }: HomePageProps) {
             })
             return;
         }
-        socket.emit("find-room", { username });
-        console.log("emitted find room");
+        socket.emit("find-room", { username, isPrivate: false });
     }
+
     return (
         <div className="min-h-screen bg-bg flex items-center justify-center">
             <div className="bg-white/5 backdrop-blur-md p-8 rounded-2xl shadow-lg w-full max-w-sm">
@@ -77,10 +75,17 @@ export function HomePage({ socket, setJoined, setRoomId }: HomePageProps) {
                 />
 
                 <button
-                    className="w-full mt-4 bg-blue-600 hover:bg-blue-700 transition text-white font-medium py-2 rounded-lg"
+                    className="w-full mt-4 bg-blue-600 hover:bg-blue-700 transition text-white font-medium py-2 rounded-lg cursor-pointer"
                     onClick={handleRoomJoin}
                 >
-                    Join Room
+                    Join Random Room
+                </button>
+
+                <button
+                    className="w-full mt-4 bg-blue-600 hover:bg-blue-700 transition text-white font-medium py-2 rounded-lg cursor-pointer"
+                    onClick={() => navigate("/create-room")}
+                >
+                    Create Room
                 </button>
             </div>
         </div>

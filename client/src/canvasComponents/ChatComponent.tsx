@@ -1,34 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
-import { RoomInfo } from "../pages/CanvasPage";
 
 type ChatComponentProps = {
     socket: Socket;
-    joined: boolean;
-    wordToGuess: string;
-    setIsGuessed: React.Dispatch<React.SetStateAction<boolean>>;
-    setCanDraw: React.Dispatch<React.SetStateAction<boolean>>;
-    roomInfo: RoomInfo;
+    wordToGuess?: string;
+    setIsGuessed?: React.Dispatch<React.SetStateAction<boolean>>;
+    setCanDraw?: React.Dispatch<React.SetStateAction<boolean>>;
+    canType: boolean;
+    setCanType?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export function ChatComponent({ socket, joined, wordToGuess, setIsGuessed, setCanDraw, roomInfo }: ChatComponentProps) {
+
+export function ChatComponent({ socket, wordToGuess, setIsGuessed, setCanDraw, canType, setCanType }: ChatComponentProps) {
     const username = localStorage.getItem("username") || "Anonymous";
     const theme = localStorage.getItem("isLightTheme");
 
-    const [data, setData] = useState<string[]>([]);
+
     const [input, setInput] = useState("");
-    const [canType, setCanType] = useState<boolean>(socket.id === roomInfo?.currentDrawerId);
+    const [data, setData] = useState<string[]>([]);
 
     useEffect(() => {
         function handleMessage({ msg, username }: { msg: string, username: string }) {
             setData((prevData) => [...prevData, `${username}: ${msg}`]);
+            console.log("Sent message");
         }
 
         function handleRoomInfo({ currentDrawerId }: { currentDrawerId: string }) {
-            // Update canDraw based on whether this user is the current drawer
             const isCurrentDrawer = socket.id === currentDrawerId;
-            setCanDraw(isCurrentDrawer);
-            setCanType(!isCurrentDrawer); 
+            if (setCanDraw) setCanDraw(isCurrentDrawer);
+            if (setCanType) setCanType(!isCurrentDrawer);
         }
 
         socket.on("message", handleMessage);
@@ -39,20 +39,18 @@ export function ChatComponent({ socket, joined, wordToGuess, setIsGuessed, setCa
             socket.off("message", handleMessage);
             socket.off("room-info", handleRoomInfo);
         };
-    }, [socket, theme, setIsGuessed, setCanDraw]);
+    }, [socket, theme, setIsGuessed, setCanDraw, setCanType, setData]);
 
     function sendMessage() {
-        if (!joined) return;
+        if (!input || !username) return;
 
-        if (input || username) {
-            if (input.toLowerCase() === wordToGuess.toLowerCase()) {
-                socket.emit("message", { msg: `has guessed the word`, username });
-                setIsGuessed(true);
-            } else {
-                socket.emit("message", { msg: input, username });
-            }
-            setInput("");
+        if (wordToGuess && setIsGuessed && input.toLowerCase() === wordToGuess.toLowerCase()) {
+            socket.emit("message", { msg: `has guessed the word`, username });
+            setIsGuessed(true);
+        } else {
+            socket.emit("message", { msg: input, username });
         }
+        setInput("");
     }
 
     function handleSend(e: React.KeyboardEvent<HTMLTextAreaElement>) {

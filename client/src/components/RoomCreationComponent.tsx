@@ -1,0 +1,95 @@
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Socket } from "socket.io-client";
+import { RoomInfo } from "../App";
+
+type RoomCreationComponentProps = {
+    socket: Socket;
+    setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
+}
+
+export function RoomCreationComponent({ socket, setRoomInfo }: RoomCreationComponentProps) {
+
+    const username = localStorage.getItem("username");
+    const [maxPlayers, setMaxPlayers] = useState(3);
+    const [turnTime, setTurnTime] = useState(80);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+
+        const handleRoomInfo = ({ roomId, members, currentDrawerId, turnEndsAt }: RoomInfo) => {
+            console.log("Received room-info:", { roomId, members, currentDrawerId, turnEndsAt });
+            setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt });
+        };
+
+        socket.on("room-info", handleRoomInfo);
+
+        socket.on("private-room-created", (roomId: string) => {
+            navigate(`/room/${roomId}`);
+        })
+
+        return () => {
+            socket.off("private-room-created");
+        }
+    })
+
+    function handleRoomCreation() {
+        const turnTimeMs = turnTime * 1000;
+        socket.emit("create-private-room", { username, maxPlayers, turnTime: turnTimeMs }, (roomId: string) => {
+
+            socket.emit("join-room", { roomId, username });
+
+            navigate(`/room/${roomId}`);
+        });
+    }
+
+    return (
+        <div className="flex flex-col gap-6 bg-bg-light p-8 rounded-2xl shadow-lg w-full max-w-md">
+
+            <h1 className="text-2xl font-semibold text-text text-center mb-4">
+                Room Settings
+            </h1>
+
+            {/* Max Players */}
+            <div className="flex flex-col gap-1">
+                <label className="text-text font-medium">Max Players</label>
+                <select
+                    value={maxPlayers}
+                    onChange={(e) => setMaxPlayers(Number(e.target.value))}
+                    className="p-2 rounded-lg border border-border bg-bg text-text focus:outline-none focus:ring-2 focus:ring-primary">
+                    {[1, 2, 3, 4, 5, 6].map(num => (
+                        <option key={num} value={num}>{num}</option>
+                    ))}
+                </select>
+            </div>
+
+            {/* Time to Draw */}
+            <div className="flex flex-col gap-1">
+                <label className="text-text font-medium">Time to Draw (seconds)</label>
+                <select
+                    value={turnTime}
+                    onChange={(e) => setTurnTime(Number(e.target.value))}
+                    className="p-2 rounded-lg border border-border bg-bg text-text focus:outline-none focus:ring-2 focus:ring-primary">
+                    {[15, 30, 60, 80, 100, 120, 140].map(time => (
+                        <option key={time} value={time}>{time}</option>
+                    ))}
+                </select>
+            </div>
+
+            {/* Room Description */}
+            <div className="flex flex-col gap-1">
+                <label className="text-text font-medium">Custom Words</label>
+                <textarea
+                    className="p-2 rounded-lg border border-border bg-bg text-text focus:outline-none focus:ring-2 focus:ring-primary resize-none h-24"
+                    placeholder="Add a description..."
+                />
+            </div>
+
+            <button
+                onClick={handleRoomCreation}
+                className="bg-blue-700 hover:bg-blue-500 text-white font-semibold py-2 rounded-lg transition cursor-pointer">
+                Create Room
+            </button>
+        </div>
+    )
+}
