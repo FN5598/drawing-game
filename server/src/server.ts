@@ -14,6 +14,7 @@ import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import taskRoutes from './routes/taskRoutes';
 import { DrawData } from "./types/DrawData";
+import path from "path";
 
 const app = express();
 dotenv.config();
@@ -31,10 +32,16 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+app.use(express.static(path.join(__dirname, "../../client/dist")));
+
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use('/tasks', taskRoutes);
 
+// Fallback to React index.html
+app.use((req, res) => {
+    res.sendFile(path.join(__dirname, "../../client/dist/index.html"));
+});
 
 const server = http.createServer(app);
 
