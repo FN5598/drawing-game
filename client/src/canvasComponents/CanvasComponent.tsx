@@ -3,6 +3,8 @@ import { useRef, useState, useEffect } from "react"
 import { Socket } from "socket.io-client";
 import transformWordToLetters from "../utils/transformWordToLetters";
 import { RoomInfo } from "../App";
+import eraserIcon from "../assets/eraser-icon.png"
+import brushIcon from "../assets/pen-icon.png"
 
 type CanvasComponentProps = {
     socket: Socket;
@@ -30,7 +32,7 @@ const CANVAS_HEIGHT = 600;
 export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed, canDraw, timeLeft }: CanvasComponentProps) {
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const [lineWidth, setLineWidth] = useState(1);
+    const [lineWidth, setLineWidth] = useState(3);
     const [drawing, setDrawing] = useState(false);
     const [color, setColor] = useState("#000000");
     const lastPosRef = useRef<{ x: number, y: number } | null>(null);
@@ -253,11 +255,11 @@ export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed
                         onClick={clearCanvas}
                     >Clear canvas</button>
 
-                    <button
+                    <img
                         className="border border-border-color p-1 rounded-lg mt-2 cursor-pointer bg-bg text-text"
                         onClick={() => setIsEraser(prev => !prev)}
-                    >{isEraser ? "Paint" : "Erase"}
-                    </button>
+                        src={isEraser ? eraserIcon : brushIcon}
+                    />
                 </div>
             )}
         </div >

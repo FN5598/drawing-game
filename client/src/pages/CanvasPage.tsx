@@ -77,14 +77,30 @@ export function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw 
             socket.emit("message", { msg: "is the next player drawing", username: playerUsername });
         }
 
+        function handleNotEnoughPlayers() {
+            navigate("/");
+            toast.info("Left the room! Not enough players to continue the game", {
+                position: "top-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: `${theme}`
+            })
+        }
+
         socket.on("left-room", handleLeaveRoom);
         socket.on("room-info", handleRoomInfo);
         socket.on("next-player", handleNextPlayer);
+        socket.on("not-enough-players", handleNotEnoughPlayers)
 
         return () => {
             socket.off("room-info", handleRoomInfo);
             socket.off("left-room", handleLeaveRoom);
             socket.off("next-player", handleNextPlayer);
+            socket.off("not-enough-players");
         }
     }, [navigate, socket, theme, roomInfo.currentDrawerId, roomInfo.members, setRoomInfo, joined]);
 

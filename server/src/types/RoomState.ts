@@ -7,4 +7,5 @@ export type RoomState = {
     turnTimeout?: NodeJS.Timeout | null;
     isPrivate: boolean;
     turnTime: number;
+    guessedMembers: string[] | null;
 };
