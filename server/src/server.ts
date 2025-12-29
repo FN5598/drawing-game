@@ -55,7 +55,6 @@ io.on('connection', (socket) => {
 
 
     function startRoomTurn(roomId: string) {
-        console.log("Started room timer");
         const room = rooms.get(roomId);
         if (!room) return;
 
@@ -67,13 +66,11 @@ io.on('connection', (socket) => {
         const turnTime = room.turnTime
 
         room.turnEndsAt = Date.now() + turnTime;
-        console.log("Turn ends at:", room.turnEndsAt);
 
         // Schedule the next turn
         room.turnTimeout = setTimeout(() => {
             // Emit next player
             io.to(roomId).emit("next-player");
-            console.log("socket emit next player Start room Timer");
 
 
             room.turnTimeout = null;
@@ -97,7 +94,6 @@ io.on('connection', (socket) => {
             roomDrawing: []
         };
 
-        console.log("Created room:", room);
         rooms.set(roomId, room);
         return room;
     }
@@ -163,8 +159,6 @@ io.on('connection', (socket) => {
     async function nextPlayerDrawing(roomId: string) {
         const room = rooms.get(roomId);
         if (!room) return;
-
-        console.log("room members count", room.members.length)
         if (room.members.length <= 1) {
             LeaveRoom();
             socket.emit("not-enough-players");
@@ -191,8 +185,6 @@ io.on('connection', (socket) => {
         const wordToGuess = wordObj?.word;
         if (wordToGuess) {
             roomWords.set(roomId, wordToGuess);
-            console.log("New word created:", wordToGuess);
-            console.log("guessed members:", room.guessedMembers)
         }
 
         io.to(roomId).emit("word-to-guess", wordToGuess);
@@ -209,8 +201,6 @@ io.on('connection', (socket) => {
     }
 
     async function joinRoom(roomId: string, socket: Socket, username: string) {
-        console.log("Joined user", username, "To room", roomId);
-
         const room = rooms.get(roomId);
         if (!room) return;
         socket.join(roomId);
@@ -235,7 +225,6 @@ io.on('connection', (socket) => {
             const wordToGuess = wordObj?.word;
             if (wordToGuess) {
                 roomWords.set(roomId, wordToGuess);
-                console.log("New word created:", wordToGuess);
             }
         }
         const members = room.members.map(id => {
@@ -257,15 +246,11 @@ io.on('connection', (socket) => {
     }
 
     socket.on("user-guessed-word", ({ id, roomId }: { id: string, roomId: string }) => {
-        console.log("user guessed word", id, roomId);
         const room = rooms.get(roomId);
         if (!room) return;
 
-        console.log(room);
-
         if (!room.guessedMembers?.includes(id)) {
             room.guessedMembers?.push(id);
-            console.log("Guessed members array", room.guessedMembers)
         }
 
         if (room.guessedMembers?.length === room.members.length - 1) {
@@ -281,8 +266,6 @@ io.on('connection', (socket) => {
         if (!room) return;
 
         io.to(roomId).emit("game-started", { roomId });
-
-        console.log(`Game started in room ${roomId}`);
     })
 
     socket.on("create-private-room", async ({ username, maxPlayers, turnTime }: { username: string, maxPlayers: number, turnTime: number }) => {
@@ -309,7 +292,6 @@ io.on('connection', (socket) => {
                 username: user?.data.username
             };
         });
-        console.log("Members:", members);
         const currentDrawerId = room.members[room.currentDrawerIndex];
         const turnEndsAt = room.turnEndsAt;
 
@@ -319,16 +301,13 @@ io.on('connection', (socket) => {
             currentDrawerId,
             turnEndsAt
         })
-        console.log("Emitted info");
     })
 
     socket.on("find-room", async ({ username, isPrivate }: { username: string, isPrivate: boolean }) => {
         let room = findAvailableRoom();
-        console.log("Found availible rooms:", room);
 
         if (!room) {
             room = createRoom(isPrivate);
-            console.log("Created room:", room);
         }
 
         await joinRoom(room.roomId, socket, username);
@@ -348,7 +327,6 @@ io.on('connection', (socket) => {
             return;
         }
         const word = roomWords.get(roomId);
-        console.log("Sending word to client:", word);
         socket.emit("word-to-guess", word || "");
         socket.emit("current-drawing", { drawingData: room.roomDrawing });
     });

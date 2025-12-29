@@ -6,7 +6,7 @@ import lockClose from '../assets/lock-close.png';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-export function LoginPage() {
+function LoginPage() {
     const navigate = useNavigate();
     const theme = localStorage.getItem("isLightTheme");
 
@@ -121,3 +121,5 @@ export function LoginPage() {
         </form>
     );
 }
+
+export default LoginPage

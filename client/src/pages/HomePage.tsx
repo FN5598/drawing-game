@@ -2,12 +2,15 @@ import { Socket } from "socket.io-client";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import LoadingComponent from "../components/LoadingComponent";
 
 type HomePageProps = {
     socket: Socket;
+    loading: boolean;
+    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export function HomePage({ socket }: HomePageProps) {
+function HomePage({ socket, loading, setLoading }: HomePageProps) {
     const theme = localStorage.getItem("isLightTheme");
 
     const navigate = useNavigate();
@@ -15,7 +18,6 @@ export function HomePage({ socket }: HomePageProps) {
 
     useEffect(() => {
         socket.on("room-joined", (roomId: string) => {
-            console.log("Joined room:", roomId);
             navigate(`/canvas/${roomId}`)
             localStorage.setItem("roomId", roomId);
             localStorage.setItem("joined", "true");
@@ -41,6 +43,7 @@ export function HomePage({ socket }: HomePageProps) {
     }
 
     function handleRoomJoin() {
+        setLoading(true);
         if (!username) {
             toast.warn("Please type your username", {
                 position: "top-center",
@@ -57,7 +60,9 @@ export function HomePage({ socket }: HomePageProps) {
         socket.emit("find-room", { username, isPrivate: false });
     }
 
-    return (
+    return loading ? (
+        <LoadingComponent />
+    ) : (
         <div className="min-h-screen bg-bg flex items-center justify-center">
             <div className="bg-white/5 backdrop-blur-md p-8 rounded-2xl shadow-lg w-full max-w-sm">
                 <h1 className="text-text text-2xl font-semibold text-center mb-6">
@@ -89,6 +94,9 @@ export function HomePage({ socket }: HomePageProps) {
                 </button>
             </div>
         </div>
-
     );
+
 }
+
+
+export default HomePage

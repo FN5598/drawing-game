@@ -87,7 +87,6 @@ export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed
         }
 
         function handleWord(word: string) {
-            console.log("Word received:", word);
             setWordToGuess(word);
         }
 
@@ -115,12 +114,10 @@ export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed
     useEffect(() => {
         // If already in a room, request word immediately
         if (roomId) {
-            console.log("Already in room:", roomId);
             socket.emit("get-word");
         }
 
-        function handleRoomJoined(roomId: string) {
-            console.log("Room joined:", roomId);
+        function handleRoomJoined() {
             socket.emit("get-word");
         }
 

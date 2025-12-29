@@ -31,7 +31,10 @@ export function CreateRoomPage({ socket, roomInfo, setRoomInfo }: CreateRoomPage
             <ChatComponent
                 socket={socket}
                 canType={canType}
+                roomInfo={roomInfo}
             />
         </div>
     )
 }
+
+export default CreateRoomPage

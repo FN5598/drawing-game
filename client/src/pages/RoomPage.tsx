@@ -14,7 +14,7 @@ type RoomPageProps = {
     setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
 }
 
-export function RoomPage({ socket, roomInfo, setRoomInfo }: RoomPageProps) {
+function RoomPage({ socket, roomInfo, setRoomInfo }: RoomPageProps) {
 
     const username = localStorage.getItem("username");
     const navigate = useNavigate();
@@ -27,7 +27,6 @@ export function RoomPage({ socket, roomInfo, setRoomInfo }: RoomPageProps) {
 
     useEffect(() => {
         const handleRoomInfo = ({ roomId, members, currentDrawerId, turnEndsAt }: RoomInfo) => {
-            console.log("Received room-info:", { roomId, members, currentDrawerId, turnEndsAt });
             setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt });
         };
 
@@ -45,17 +44,11 @@ export function RoomPage({ socket, roomInfo, setRoomInfo }: RoomPageProps) {
         }
     }, [setCanType, navigate, socket, setRoomInfo, roomInfo])
 
-    console.log(roomId);
-
     useEffect(() => {
-        console.log("Trying to join room", roomId, hasJoinedRef.current);
         if (!roomId || hasJoinedRef.current) return;
 
         hasJoinedRef.current = true;
 
-        console.log("Room ID params", roomId);
-
-        console.log("emitting join room UI");
         socket.emit("join-room", {
             roomId,
             username
@@ -65,7 +58,6 @@ export function RoomPage({ socket, roomInfo, setRoomInfo }: RoomPageProps) {
 
     function handleStartGame() {
         socket.emit("start-game", { roomId });
-        console.log("Starting game");
     }
 
     return (
@@ -75,7 +67,7 @@ export function RoomPage({ socket, roomInfo, setRoomInfo }: RoomPageProps) {
 
                 <RoomCreationComponent socket={socket} setRoomInfo={setRoomInfo} />
 
-                <ChatComponent socket={socket} canType={canType} />
+                <ChatComponent socket={socket} canType={canType} roomInfo={roomInfo} />
             </div>
             <div className="flex flex-col md:flex-row mt-12 items-center justify-center gap-6 md:gap-12">
                 {/* Room Link Section */}
@@ -107,3 +99,4 @@ export function RoomPage({ socket, roomInfo, setRoomInfo }: RoomPageProps) {
 
     )
 }
+export default RoomPage

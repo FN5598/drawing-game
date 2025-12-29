@@ -15,9 +15,10 @@ type CanvasPageProps = {
     setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
     setCanDraw: React.Dispatch<React.SetStateAction<boolean>>;
     canDraw: boolean;
+    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw }: CanvasPageProps) {
+function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoading}: CanvasPageProps) {
     const navigate = useNavigate();
     const [wordToGuess, setWordToGuess] = useState<string>('');
     const [isGuessed, setIsGuessed] = useState(false);
@@ -49,7 +50,6 @@ export function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw 
 
     useEffect(() => {
         const handleRoomInfo = ({ roomId, members, currentDrawerId, turnEndsAt }: RoomInfo) => {
-            console.log("Received room-info:", { roomId, members, currentDrawerId, turnEndsAt });
             setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt });
         };
 
@@ -71,9 +71,6 @@ export function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw 
 
         function handleNextPlayer() {
             const playerUsername = roomInfo.members?.find(member => member.id === roomInfo.currentDrawerId)?.username;
-
-            console.log("Next player to draw is:", playerUsername);
-
             socket.emit("message", { msg: "is the next player drawing", username: playerUsername });
         }
 
@@ -124,7 +121,9 @@ export function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw 
         socket.emit("make-word");
 
         socket.emit("get-room-info");
-    }, [socket]);
+
+        setLoading(false);
+    }, [socket, setLoading]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -190,3 +189,5 @@ export function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw 
         </div>
     );
 } 
+
+export default CanvasPage

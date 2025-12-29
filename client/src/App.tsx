@@ -1,14 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
-import { HomePage } from './pages/HomePage';
-import { LoginPage } from './pages/LoginPage';
-import { SignupPage } from './pages/SignupPage';
 import { ToastContainer } from 'react-toastify';
-import { useEffect, useState } from 'react';
-import { CanvasPage } from "./pages/CanvasPage";
+import { useEffect, useState, Suspense, lazy } from 'react';
 import { io, Socket } from "socket.io-client";
-import { CreateRoomPage } from './pages/CreateRoomPage';
-import { RoomPage } from './pages/RoomPage';
 import { RoomContext } from './Contexts/RoomContext';
+import LoadingComponent from "./components/LoadingComponent"
 
 export type RoomInfo = {
   roomId: number | "Loading ...";
@@ -19,7 +14,16 @@ export type RoomInfo = {
 
 const socket: Socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", { autoConnect: true });
 
+
+const RoomPage = lazy(() => import("./pages/RoomPage"));
+const CreateRoomPage = lazy(() => import('./pages/CreateRoomPage'));
+const CanvasPage = lazy(() => import("./pages/CanvasPage"));
+const HomePage = lazy(() => import('./pages/HomePage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const SignupPage = lazy(() => import('./pages/SignupPage'));
+
 function App() {
+  const [loading, setLoading] = useState(false);
   const [canDraw, setCanDraw] = useState<boolean>(false)
   const [canType, setCanType] = useState(true);
   const [roomInfo, setRoomInfo] = useState<RoomInfo>({
@@ -58,35 +62,41 @@ function App() {
 
 
       {/* All Routes */}
-      <Routes>
-        <Route index element={<HomePage
-          socket={socket} />} />
+      <Suspense fallback={<LoadingComponent />}>
+        <Routes>
+          <Route index element={<HomePage
+            socket={socket}
+            loading={loading}
+            setLoading={setLoading}
+            />} />
 
-        {/* Auth routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/sign-up" element={<SignupPage />} />
+          {/* Auth routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/sign-up" element={<SignupPage />} />
 
-        <Route path="/canvas/:roomId" element={<RoomContext.Provider value={{ setCanType, canType }}><CanvasPage
-          socket={socket}
-          setRoomInfo={setRoomInfo}
-          roomInfo={roomInfo}
-          setCanDraw={setCanDraw}
-          canDraw={canDraw}
-        /> </RoomContext.Provider>}
-        />
+          <Route path="/canvas/:roomId" element={<RoomContext.Provider value={{ setCanType, canType }}><CanvasPage
+            socket={socket}
+            setRoomInfo={setRoomInfo}
+            roomInfo={roomInfo}
+            setCanDraw={setCanDraw}
+            canDraw={canDraw}
+            setLoading={setLoading}
+          /> </RoomContext.Provider>}
+          />
 
-        <Route path="/create-room" element={<RoomContext.Provider value={{ setCanType, canType }}> <CreateRoomPage
-          socket={socket}
-          roomInfo={roomInfo}
-          setRoomInfo={setRoomInfo}
-        /> </RoomContext.Provider>} />
+          <Route path="/create-room" element={<RoomContext.Provider value={{ setCanType, canType }}> <CreateRoomPage
+            socket={socket}
+            roomInfo={roomInfo}
+            setRoomInfo={setRoomInfo}
+          /> </RoomContext.Provider>} />
 
-        <Route path="/room/:roomId" element={<RoomContext.Provider value={{ setCanType, canType }}> <RoomPage
-          socket={socket}
-          roomInfo={roomInfo}
-          setRoomInfo={setRoomInfo}
-        /> </RoomContext.Provider>} />
-      </Routes>
+          <Route path="/room/:roomId" element={<RoomContext.Provider value={{ setCanType, canType }}> <RoomPage
+            socket={socket}
+            roomInfo={roomInfo}
+            setRoomInfo={setRoomInfo}
+          /> </RoomContext.Provider>} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

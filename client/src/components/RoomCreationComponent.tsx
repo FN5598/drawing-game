@@ -18,7 +18,6 @@ export function RoomCreationComponent({ socket, setRoomInfo }: RoomCreationCompo
     useEffect(() => {
 
         const handleRoomInfo = ({ roomId, members, currentDrawerId, turnEndsAt }: RoomInfo) => {
-            console.log("Received room-info:", { roomId, members, currentDrawerId, turnEndsAt });
             setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt });
         };
 

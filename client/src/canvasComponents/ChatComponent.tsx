@@ -24,7 +24,6 @@ export function ChatComponent({ socket, wordToGuess, setIsGuessed, setCanDraw, c
     useEffect(() => {
         function handleMessage({ msg, username }: { msg: string, username: string }) {
             setData((prevData) => [...prevData, `${username}: ${msg}`]);
-            console.log("Sent message");
         }
 
         function handleRoomInfo({ currentDrawerId }: { currentDrawerId: string }) {
@@ -49,7 +48,6 @@ export function ChatComponent({ socket, wordToGuess, setIsGuessed, setCanDraw, c
         if (wordToGuess && setIsGuessed && input.toLowerCase() === wordToGuess.toLowerCase()) {
             socket.emit("message", { msg: `has guessed the word`, username });
             socket.emit("user-guessed-word", { id: socket.id, roomId: roomInfo.roomId });
-            console.log("emitting user guessed word");
             setIsGuessed(true);
         } else {
             socket.emit("message", { msg: input, username });
