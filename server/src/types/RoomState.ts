@@ -1,3 +1,5 @@
+import { DrawData } from "./DrawData";
+
 export type RoomState = {
     roomId: string
     members: string[];
@@ -8,4 +10,5 @@ export type RoomState = {
     isPrivate: boolean;
     turnTime: number;
     guessedMembers: string[];
+    roomDrawing: DrawData[];
 };

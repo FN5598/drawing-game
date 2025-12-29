@@ -26,6 +26,9 @@ interface DrawData {
     isEraser: boolean;
 }
 
+
+const FPS = 45;
+const interval = 1000 / FPS;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 
@@ -35,7 +38,10 @@ export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed
     const [lineWidth, setLineWidth] = useState(3);
     const [drawing, setDrawing] = useState(false);
     const [color, setColor] = useState("#000000");
+
     const lastPosRef = useRef<{ x: number, y: number } | null>(null);
+    const lastEmitRef = useRef(0);
+
     const [isEraser, setIsEraser] = useState(false);
     const [colorPicker, setColorPicker] = useState(false);
 
@@ -85,9 +91,16 @@ export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed
             setWordToGuess(word);
         }
 
+        function handleSendDrawingData({ drawingData }: { drawingData: DrawData[] }) {
+            drawingData.map(data => {
+                handleDraw(data);
+            })
+        }
+
         socket.on("draw", handleDraw);
         socket.on("erase-canvas", handleErasePage);
         socket.on("word-to-guess", handleWord);
+        socket.on("current-drawing", handleSendDrawingData)
 
         return () => {
             socket.off("draw", handleDraw);
@@ -139,6 +152,10 @@ export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed
         const ctx = canvas.getContext("2d");
         const pos = getCursorPos(e);
         if (!ctx || !pos) return;
+
+        const now = Date.now();
+        if (now - lastEmitRef.current < interval) return;
+        lastEmitRef.current = now;
 
         if (lastPosRef.current) {
             if (isEraser === false) {

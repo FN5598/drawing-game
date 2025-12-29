@@ -13,6 +13,7 @@ import { bannedWordsList } from "./utils/bannedWordList";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import taskRoutes from './routes/taskRoutes';
+import { DrawData } from "./types/DrawData";
 
 const app = express();
 dotenv.config();
@@ -92,7 +93,8 @@ io.on('connection', (socket) => {
             isPrivate,
             turnTimeout: null,
             turnTime: turnTime ?? 80 * 1000,
-            guessedMembers: []
+            guessedMembers: [],
+            roomDrawing: []
         };
 
         console.log("Created room:", room);
@@ -339,6 +341,8 @@ io.on('connection', (socket) => {
 
     socket.on("get-word", () => {
         const roomId = socket.data.roomId;
+        const room = rooms.get(roomId);
+        if (!room) return;
         if (!roomId) {
             socket.emit("word-to-guess", "");
             return;
@@ -346,6 +350,7 @@ io.on('connection', (socket) => {
         const word = roomWords.get(roomId);
         console.log("Sending word to client:", word);
         socket.emit("word-to-guess", word || "");
+        socket.emit("current-drawing", { drawingData: room.roomDrawing });
     });
 
     socket.on("message", ({ msg, username }: { msg: string, username: string }) => {
@@ -388,7 +393,7 @@ io.on('connection', (socket) => {
 
     });
 
-    socket.on("draw", (data) => {
+    socket.on("draw", (data: DrawData) => {
         const roomId = socket.data.roomId;
         if (!roomId) return;
 
@@ -400,6 +405,8 @@ io.on('connection', (socket) => {
         if (socket.id !== currentDrawerId) {
             return;
         }
+
+        room.roomDrawing.push(data)
 
         io.to(roomId).emit("draw", data);
     });
