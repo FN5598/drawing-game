@@ -92,7 +92,7 @@ io.on('connection', (socket) => {
             isPrivate,
             turnTimeout: null,
             turnTime: turnTime ?? 80 * 1000,
-            guessedMembers: null
+            guessedMembers: []
         };
 
         console.log("Created room:", room);
@@ -179,11 +179,18 @@ io.on('connection', (socket) => {
             }
         });
 
+        if (room.turnTimeout) {
+            clearTimeout((room.turnTimeout));
+        }
+
+        startRoomTurn(roomId);
+
         const wordObj = await fetchRandomWord();
         const wordToGuess = wordObj?.word;
         if (wordToGuess) {
             roomWords.set(roomId, wordToGuess);
             console.log("New word created:", wordToGuess);
+            console.log("guessed members:", room.guessedMembers)
         }
 
         io.to(roomId).emit("word-to-guess", wordToGuess);
@@ -248,16 +255,22 @@ io.on('connection', (socket) => {
     }
 
     socket.on("user-guessed-word", ({ id, roomId }: { id: string, roomId: string }) => {
+        console.log("user guessed word", id, roomId);
         const room = rooms.get(roomId);
         if (!room) return;
 
+        console.log(room);
+
         if (!room.guessedMembers?.includes(id)) {
             room.guessedMembers?.push(id);
+            console.log("Guessed members array", room.guessedMembers)
         }
 
         if (room.guessedMembers?.length === room.members.length - 1) {
+            room.guessedMembers = [];
             nextPlayerDrawing(roomId);
             socket.emit("next-player");
+            io.to(roomId).emit("all-players-guessed");
         }
     })
 

@@ -91,10 +91,25 @@ export function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw 
             })
         }
 
+        function handleAllGuessed() {
+            setIsGuessed(false);
+            toast.info("All players guessed! Drawing next word", {
+                position: "top-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: `${theme}`
+            })
+        }
+
         socket.on("left-room", handleLeaveRoom);
         socket.on("room-info", handleRoomInfo);
         socket.on("next-player", handleNextPlayer);
         socket.on("not-enough-players", handleNotEnoughPlayers)
+        socket.on("all-players-guessed", handleAllGuessed);
 
         return () => {
             socket.off("room-info", handleRoomInfo);
@@ -169,6 +184,7 @@ export function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw 
                     setCanDraw={setCanDraw}
                     canType={canType}
                     setCanType={setCanType}
+                    roomInfo={roomInfo}
                 />
             </div>
         </div>

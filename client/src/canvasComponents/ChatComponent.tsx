@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
+import { RoomInfo } from "../App";
 
 type ChatComponentProps = {
     socket: Socket;
@@ -8,10 +9,11 @@ type ChatComponentProps = {
     setCanDraw?: React.Dispatch<React.SetStateAction<boolean>>;
     canType: boolean;
     setCanType?: React.Dispatch<React.SetStateAction<boolean>>;
+    roomInfo: RoomInfo;
 }
 
 
-export function ChatComponent({ socket, wordToGuess, setIsGuessed, setCanDraw, canType, setCanType }: ChatComponentProps) {
+export function ChatComponent({ socket, wordToGuess, setIsGuessed, setCanDraw, canType, setCanType, roomInfo }: ChatComponentProps) {
     const username = localStorage.getItem("username") || "Anonymous";
     const theme = localStorage.getItem("isLightTheme");
 
@@ -46,6 +48,8 @@ export function ChatComponent({ socket, wordToGuess, setIsGuessed, setCanDraw, c
 
         if (wordToGuess && setIsGuessed && input.toLowerCase() === wordToGuess.toLowerCase()) {
             socket.emit("message", { msg: `has guessed the word`, username });
+            socket.emit("user-guessed-word", { id: socket.id, roomId: roomInfo.roomId });
+            console.log("emitting user guessed word");
             setIsGuessed(true);
         } else {
             socket.emit("message", { msg: input, username });
