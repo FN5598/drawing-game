@@ -20,8 +20,12 @@
     --color-secondary: var(--secondary);
 
     --color-danger: var(--danger);
+
     --color-warning: var(--warning);
+    --color-warning-hover: var(--warning-hover);
+
     --color-success: var(--success);
+
     --color-info: var(--info);
 }
 
@@ -40,7 +44,7 @@ input {
     --text: hsl(300 0% 95%);
     --text-muted: hsl(300 0% 69%);
 
-    --canvas: hsl(300,0%,100%);
+    --canvas: hsl(300, 0%, 100%);
 
     --bg-canvas: hsl(300 0% 13%);
 
@@ -57,15 +61,19 @@ input {
     --secondary: hsl(40 53% 60%);
 
     --danger: rgb(205, 14, 25);
+
     --warning: rgb(255, 14, 25);
+    --warning-hover: rgb(255, 100, 100);
+
     --success: hsl(146 17% 59%);
+
     --info: hsl(217 28% 65%);
 }
 
 .light {
     --text: hsl(300 0% 95%);
     --text-muted: hsl(300 0% 69%);
-    
+
     --bg-canvas: hsl(0 0% 58%);
 
     --bg: hsl(300 0% 4%);

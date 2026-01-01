@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Socket } from "socket.io-client";
 import { RoomInfo } from "../App";
+import { toast } from "react-toastify";
 
 type RoomCreationComponentProps = {
     socket: Socket;
@@ -14,6 +15,8 @@ export function RoomCreationComponent({ socket, setRoomInfo }: RoomCreationCompo
     const [maxPlayers, setMaxPlayers] = useState(3);
     const [turnTime, setTurnTime] = useState(80);
     const navigate = useNavigate();
+    const { roomId } = useParams();
+    const theme = localStorage.getItem("isLightTheme")
 
     useEffect(() => {
 
@@ -21,7 +24,22 @@ export function RoomCreationComponent({ socket, setRoomInfo }: RoomCreationCompo
             setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt });
         };
 
+        function handleLeaveRoom() {
+            toast.info("You have left the room.", {
+                position: "top-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: false,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: `${theme}`
+            });
+            navigate(`/`);
+        }
+
         socket.on("room-info", handleRoomInfo);
+        socket.on("left-room", handleLeaveRoom);
 
         socket.on("private-room-created", (roomId: string) => {
             navigate(`/room/${roomId}`);
@@ -29,8 +47,9 @@ export function RoomCreationComponent({ socket, setRoomInfo }: RoomCreationCompo
 
         return () => {
             socket.off("private-room-created");
+            socket.off("left-room", handleLeaveRoom);
         }
-    })
+    }, [navigate, socket, theme, setRoomInfo])
 
     function handleRoomCreation() {
         const turnTimeMs = turnTime * 1000;
@@ -40,6 +59,14 @@ export function RoomCreationComponent({ socket, setRoomInfo }: RoomCreationCompo
 
             navigate(`/room/${roomId}`);
         });
+    }
+
+    function handleCancel() {
+        if (roomId) {
+            socket.emit("leave-room");
+        } else {
+            navigate('/');
+        }
     }
 
     return (
@@ -89,6 +116,13 @@ export function RoomCreationComponent({ socket, setRoomInfo }: RoomCreationCompo
                 className="bg-blue-700 hover:bg-blue-500 text-white font-semibold py-2 rounded-lg transition cursor-pointer">
                 Create Room
             </button>
+
+            <button
+                onClick={handleCancel}
+                className="bg-warning hover:bg-warning-hover text-white font-semibold py-2 rounded-lg transition cursor-pointer">
+                {roomId ? "Leave Room" : "Cancel"}
+            </button>
+
         </div>
     )
 }

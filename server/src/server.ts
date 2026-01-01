@@ -14,7 +14,6 @@ import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import taskRoutes from './routes/taskRoutes';
 import { DrawData } from "./types/DrawData";
-import path from "path";
 
 const app = express();
 dotenv.config();
@@ -24,9 +23,26 @@ connectDB();
     await setupSwagger(app);
 })();
 
+const allowedOrigins = new Set([
+    process.env.CLIENT_URL,
+    "http://localhost:5173"
+])
+
+const normalizeOrigin = (origin?: string) =>
+    origin?.replace(/\/$/, "");
+
 // Middlewares
 app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+
+        const normalizedOrigin = normalizeOrigin(origin);
+        if (allowedOrigins.has(normalizedOrigin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS blocked: ${origin}`))
+        }
+    },
     credentials: true
 }));
 app.use(express.json());
@@ -40,7 +56,16 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL || "http://localhost:5173",
+        origin: (origin, callback) => {
+            if (!origin) return callback(null, true);
+
+            const normalizedOrigin = normalizeOrigin(origin);
+            if (allowedOrigins.has(normalizedOrigin)) {
+                callback(null, true);
+            } else {
+                callback(new Error(`CORS blocked: ${origin}`))
+            }
+        },
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -116,6 +141,7 @@ io.on('connection', (socket) => {
         if (!room) return;
 
         socket.leave(roomId);
+        socket.emit("left-room");
         socket.data.roomId = null;
         room.members = room.members.filter(id => id !== socket.id);
 
@@ -150,9 +176,7 @@ io.on('connection', (socket) => {
             currentDrawerId,
             turnEndsAt: room.turnEndsAt
         });
-
         if (room.members.length === 0) return;
-        socket.emit("left-room");
         io.to(roomId).emit("user-left", socket.id);
     }
 

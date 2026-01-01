@@ -87,7 +87,6 @@ function App() {
 
           <Route path="/create-room" element={<RoomContext.Provider value={{ setCanType, canType }}> <CreateRoomPage
             socket={socket}
-            roomInfo={roomInfo}
             setRoomInfo={setRoomInfo}
           /> </RoomContext.Provider>} />
 
