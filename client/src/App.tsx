@@ -12,8 +12,9 @@ export type RoomInfo = {
   turnEndsAt: number | "Loading ...";
 }
 
-const socket: Socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", { autoConnect: true });
-
+const socket: Socket = io(import.meta.env.VITE_API_URL, {
+  autoConnect: true
+})
 
 const RoomPage = lazy(() => import("./pages/RoomPage"));
 const CreateRoomPage = lazy(() => import('./pages/CreateRoomPage'));
@@ -68,7 +69,7 @@ function App() {
             socket={socket}
             loading={loading}
             setLoading={setLoading}
-            />} />
+          />} />
 
           {/* Auth routes */}
           <Route path="/login" element={<LoginPage />} />

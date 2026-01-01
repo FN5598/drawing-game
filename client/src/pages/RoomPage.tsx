@@ -74,12 +74,12 @@ function RoomPage({ socket, roomInfo, setRoomInfo }: RoomPageProps) {
                 <div className="flex items-center bg-bg-light shadow-lg rounded-xl px-6 py-4 gap-3">
                     <code className="text-lg md:text-2xl font-semibold text-text-muted break-all">
                         Room Link:{" "}
-                        <span className="text-primary">{`${import.meta.env.VITE_UI_URL}/room/${roomId}`}</span>
+                        <span className="text-primary">{`${window.location.origin}/room/${roomId}`}</span>
                     </code>
 
                     <img
                         onClick={() => {
-                            navigator.clipboard.writeText(`${import.meta.env.VITE_UI_URL}/room/${roomId}`);
+                            navigator.clipboard.writeText(`${window.location.origin}/room/${roomId}`);
                         }}
                         className="cursor-pointer w-6 h-6 hover:scale-110 transition-transform"
                         src={copyIcon}

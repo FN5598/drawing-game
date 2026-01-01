@@ -37,13 +37,25 @@ function HomePage({ socket, loading, setLoading }: HomePageProps) {
 
     function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
         if (e.key === "Enter") {
+            if (!username) {
+                toast.warn("Please type your username!", {
+                    position: "top-center",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: false,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: `${theme}`
+                })
+                return;
+            }
             localStorage.setItem("username", username);
             socket.emit("set-username", username);
         }
     }
 
     function handleRoomJoin() {
-        setLoading(true);
         if (!username) {
             toast.warn("Please type your username", {
                 position: "top-center",
@@ -57,6 +69,7 @@ function HomePage({ socket, loading, setLoading }: HomePageProps) {
             })
             return;
         }
+        setLoading(true);
         socket.emit("find-room", { username, isPrivate: false });
     }
 
