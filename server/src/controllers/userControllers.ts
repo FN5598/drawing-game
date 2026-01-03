@@ -1,17 +1,17 @@
-import User from "../models/userSchema";
+import * as userService from "../services/userService";
 import { Request, Response } from "express";
 
 //@desc Get all existing users
 //@route GET users/
 //@access Private
-const getAllUsers = async (req: Request, res: Response) => {
+const getAllUsersController = async (req: Request, res: Response) => {
     try {
-        const users = await User.find();
+        const users = await userService.getAllUsers();
 
         if (!users || users.length === 0) {
             return res.status(404).json({
                 message: "No users found",
-                success: true
+                success: false
             });
         };
 
@@ -21,7 +21,6 @@ const getAllUsers = async (req: Request, res: Response) => {
             users: users
         })
     } catch (err) {
-        console.log("Failed to get all users: ", err);
         res.status(500).json({
             message: "Server error",
             success: false
@@ -32,7 +31,7 @@ const getAllUsers = async (req: Request, res: Response) => {
 //@desc Get One user by ID
 //@route GET users/:id
 //@access Private
-const getUser = async (req: Request, res: Response) => {
+const getUserContoller = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!id) {
@@ -43,7 +42,7 @@ const getUser = async (req: Request, res: Response) => {
     }
 
     try {
-        const user = await User.findById(id);
+        const user = await userService.getUserById(id);
 
         if (!user) {
             return res.status(404).json({
@@ -58,7 +57,6 @@ const getUser = async (req: Request, res: Response) => {
             user: user
         });
     } catch (err) {
-        console.log(`Error fetching user ${id}`, err)
         return res.status(500).json({
             message: "Server error",
             success: false
@@ -69,7 +67,7 @@ const getUser = async (req: Request, res: Response) => {
 //@desc Delete User 
 //@route DELETE users/:id
 //@access Private
-const deleteUser = async (req: Request, res: Response) => {
+const deleteUserController = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!id) {
@@ -80,22 +78,13 @@ const deleteUser = async (req: Request, res: Response) => {
     }
 
     try {
-        const deletedUser = await User.findByIdAndDelete(id);
-
-        if (!deletedUser) {
-            return res.status(404).json({
-                message: "User not found",
-                success: false
-            });
-        }
+        await userService.deleteUser(id);
 
         return res.status(200).json({
             message: "Successfully deleted user",
             success: true,
-            user: deletedUser
         })
     } catch (err) {
-        console.log("Failed to delete user", err);
         return res.status(500).json({
             message: "Server error",
             success: false
@@ -104,7 +93,7 @@ const deleteUser = async (req: Request, res: Response) => {
 }
 
 export {
-    getAllUsers,
-    getUser,
-    deleteUser
+    getAllUsersController,
+    getUserContoller,
+    deleteUserController
 }

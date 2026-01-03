@@ -1,9 +1,9 @@
 /// <reference path="../types/express.d.ts" />
 import jwt from 'jsonwebtoken';
-import User from "../models/userSchema";
 import bcrypt from "bcryptjs";
 import { Request, Response } from 'express';
-
+import * as userService from "../services/userService";
+import { isValidObjectId } from 'mongoose';
 
 export interface JwtPayload {
     userId: string;
@@ -14,14 +14,20 @@ export interface JwtPayload {
 //@desc Create account
 //@route POST /auth/sign-up
 //@access Public
-const createUser = async (req: Request, res: Response) => {
+const createUserController = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
-    if (!email) return res.status(400).json({ message: "Email is required to create new account" });
-    if (!password) return res.status(400).json({ message: "Password is required to create new account" });
+    if (!email) return res.status(400).json({
+        message: "Email is required to create new account",
+        success: false
+    });
+    if (!password) return res.status(400).json({
+        message: "Password is required to create new account",
+        success: false
+    });
 
     try {
-        const existingUser = await User.findOne({ email });
+        const existingUser = await userService.getUserByEmail(email);
 
         if (existingUser) {
             return res.status(409).json({
@@ -32,14 +38,13 @@ const createUser = async (req: Request, res: Response) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await User.create({
-            email,
-            hashedPassword
-        });
+        userService.createUser(email, hashedPassword);
 
-        return res.status(201).json({ message: "Successfully created a user", success: true })
+        return res.status(201).json({
+            message: "Successfully created a user",
+            success: true
+        })
     } catch (err) {
-        console.log("Failed to create a user:", err);
         return res.status(500).json({
             message: "Server Error",
             success: false
@@ -50,14 +55,20 @@ const createUser = async (req: Request, res: Response) => {
 //@desc Login into existing account
 //@route POST /auth/login
 //@access Public
-const loginUser = async (req: Request, res: Response) => {
+const loginUserController = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
-    if (!email) return res.status(400).json({ message: "Email is required to Login into account" });
-    if (!password) return res.status(400).json({ message: "Password is required to Login into account" });
+    if (!email) return res.status(400).json({
+        message: "Email is required to Login into account",
+        success: false
+    });
+    if (!password) return res.status(400).json({
+        message: "Password is required to Login into account",
+        success: false
+    });
 
     try {
-        const user = await User.findOne({ email });
+        const user = await userService.getUserByEmail(email);
 
         if (!user) {
             return res.status(404).json({
@@ -118,7 +129,6 @@ const loginUser = async (req: Request, res: Response) => {
             }
         })
     } catch (err) {
-        console.log("Failed to Login: ", err);
         return res.status(500).json({
             message: "Server Error",
             success: false
@@ -129,7 +139,7 @@ const loginUser = async (req: Request, res: Response) => {
 //@desc Delete user account
 //@route DELETE /auth/delete
 //@access Private
-const deleteUser = async (req: Request, res: Response) => {
+const deleteUserController = async (req: Request, res: Response) => {
     const id = req.user?.userId;
 
     if (!id) {
@@ -140,7 +150,7 @@ const deleteUser = async (req: Request, res: Response) => {
     }
 
     try {
-        const userToDelete = await User.findById(id);
+        const userToDelete = await userService.getUserById(id);
 
         if (!userToDelete) {
             return res.status(404).json({
@@ -149,14 +159,13 @@ const deleteUser = async (req: Request, res: Response) => {
             })
         }
 
-        await userToDelete.deleteOne();
+        await userService.deleteUser(id);
         res.status(200).json({
             message: `Successfully deleted user ${userToDelete.email}`,
             success: true
         })
 
     } catch (err) {
-        console.log("Failed to delete account:", err);
         return res.status(500).json({
             message: "Server Error",
             success: false
@@ -167,7 +176,7 @@ const deleteUser = async (req: Request, res: Response) => {
 //@desc Refresh Expired access token
 //@route POST /auth/refresh
 //@access Public
-const refreshAccessToken = async (req: Request, res: Response) => {
+const refreshAccessTokenController = async (req: Request, res: Response) => {
     const { accessToken, refreshToken } = req.cookies;
 
     if (accessToken) {
@@ -180,7 +189,7 @@ const refreshAccessToken = async (req: Request, res: Response) => {
     if (!refreshToken) {
         return res.status(401).json({
             message: "Refresh Token expired!",
-            success: false,
+            success: false
         })
     }
 
@@ -195,7 +204,7 @@ const refreshAccessToken = async (req: Request, res: Response) => {
 
         const decoded = jwt.verify(refreshToken, REFRESH_TOKEN) as JwtPayload;
 
-        const user = await User.findById(decoded.userId);
+        const user = await userService.getUserById(decoded.userId);
         if (!user || user.refreshToken !== refreshToken) {
             return res.status(403).json({
                 message: "Invalid refresh token",
@@ -208,9 +217,9 @@ const refreshAccessToken = async (req: Request, res: Response) => {
             createdAt: (user.createdAt ?? new Date()).toISOString()
         }
 
-        const newAccessToken = jwt.sign(payload, ACCESS_TOKEN, { expiresIn: Number(ACCESS_TOKEN_EXPIRE) });
+        const accessToken = jwt.sign(payload, ACCESS_TOKEN, { expiresIn: Number(ACCESS_TOKEN_EXPIRE) });
 
-        res.cookie("accessToken", newAccessToken, {
+        res.cookie("accessToken", accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
@@ -222,7 +231,6 @@ const refreshAccessToken = async (req: Request, res: Response) => {
             success: true
         })
     } catch (err) {
-        console.log("Failed to refresh token", err);
         res.status(500).json({
             message: "Server Error",
             success: false
@@ -233,7 +241,7 @@ const refreshAccessToken = async (req: Request, res: Response) => {
 //@desc Log out user
 //@route POST /auth/logout
 //@access Private
-const logoutUser = async (req: Request, res: Response) => {
+const logoutUserController = async (req: Request, res: Response) => {
     const id = req.user?.userId;
 
     if (!id) {
@@ -244,7 +252,7 @@ const logoutUser = async (req: Request, res: Response) => {
     };
 
     try {
-        const user = await User.findById(id);
+        const user = await userService.getUserById(id);
 
         if (!user) {
             return res.status(404).json({
@@ -253,7 +261,7 @@ const logoutUser = async (req: Request, res: Response) => {
             })
         }
 
-        user.refreshToken = '';
+        user.refreshToken = undefined;
         await user.save();
 
         res.clearCookie('accessToken');
@@ -264,7 +272,6 @@ const logoutUser = async (req: Request, res: Response) => {
             success: true
         });
     } catch (err) {
-        console.log("Failed to logout user", err);
         res.status(500).json({
             message: "Server Error",
             success: false
@@ -273,9 +280,9 @@ const logoutUser = async (req: Request, res: Response) => {
 }
 
 export {
-    createUser,
-    loginUser,
-    deleteUser,
-    refreshAccessToken,
-    logoutUser
+    createUserController,
+    loginUserController,
+    deleteUserController,
+    refreshAccessTokenController,
+    logoutUserController
 }

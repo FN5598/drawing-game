@@ -1,17 +1,17 @@
 import express from "express"
-import { loginUser, createUser, deleteUser, refreshAccessToken, logoutUser } from "../controllers/authControllers";
-import verifyToken from "../middlewares/verifyToken"; 
+import { loginUserController, createUserController, deleteUserController, refreshAccessTokenController, logoutUserController } from "../controllers/authControllers";
+import verifyToken from "../middlewares/verifyToken";
 
 const router = express.Router();
 
-router.post("/login", loginUser);
+router.post("/login", loginUserController);
 
-router.post("/sign-up", createUser);
+router.post("/sign-up", createUserController);
 
-router.delete("/delete", verifyToken, deleteUser);
+router.delete("/delete", verifyToken, deleteUserController);
 
-router.post("/refresh", refreshAccessToken);
+router.post("/refresh", refreshAccessTokenController);
 
-router.post("/logout", verifyToken, logoutUser);
+router.post("/logout", verifyToken, logoutUserController);
 
 export default router;

@@ -10,7 +10,8 @@
     ],
     "types": [
       "node",
-      "express"
+      "express",
+      "jest"
     ],
     // See also https://aka.ms/tsconfig/module
     "module": "commonjs",
@@ -44,8 +45,7 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "src/**/*.ts",
-    "src/types/*.d.ts",
-    "src/utils/*.ts"
+    "src",
+    "tests"
   ]
 }
