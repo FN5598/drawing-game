@@ -27,7 +27,7 @@ export function RoomCreationComponent({ socket, setRoomInfo }: RoomCreationCompo
         function handleLeaveRoom() {
             toast.info("You have left the room.", {
                 position: "top-center",
-                autoClose: 5000,
+                autoClose: 500,
                 hideProgressBar: false,
                 closeOnClick: false,
                 pauseOnHover: true,

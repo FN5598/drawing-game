@@ -37,7 +37,7 @@ function LoginPage() {
             if (response.data.success === true) {
                 toast.success(`${response.data.message}`, {
                     position: "top-center",
-                    autoClose: 5000,
+                    autoClose: 500,
                     hideProgressBar: false,
                     closeOnClick: false,
                     pauseOnHover: true,
@@ -51,7 +51,7 @@ function LoginPage() {
             if (axios.isAxiosError(err)) {
                 toast.warn(`${err.response?.data.message}`, {
                     position: "top-center",
-                    autoClose: 5000,
+                    autoClose: 500,
                     hideProgressBar: false,
                     closeOnClick: false,
                     pauseOnHover: true,

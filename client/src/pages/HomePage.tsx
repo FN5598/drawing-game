@@ -23,6 +23,7 @@ function HomePage({ socket, loading, setLoading }: HomePageProps) {
             localStorage.setItem("joined", "true");
         });
 
+        localStorage.removeItem("roomId");
         return () => {
             socket.off("room-joined");
         }
@@ -40,7 +41,7 @@ function HomePage({ socket, loading, setLoading }: HomePageProps) {
             if (!username) {
                 toast.warn("Please type your username!", {
                     position: "top-center",
-                    autoClose: 5000,
+                    autoClose: 500,
                     hideProgressBar: false,
                     closeOnClick: false,
                     pauseOnHover: true,
@@ -59,7 +60,7 @@ function HomePage({ socket, loading, setLoading }: HomePageProps) {
         if (!username) {
             toast.warn("Please type your username", {
                 position: "top-center",
-                autoClose: 5000,
+                autoClose: 500,
                 hideProgressBar: false,
                 closeOnClick: false,
                 pauseOnHover: true,

@@ -106,7 +106,6 @@ export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed
             socket.off("erase-canvas", handleErasePage);
             socket.off("word-to-guess", handleWord);
             socket.off("user-left");
-            socket.off("room-info");
         };
     }, [socket, setWordToGuess]);
 

@@ -94,6 +94,8 @@ function App() {
             socket={socket}
             roomInfo={roomInfo}
             setRoomInfo={setRoomInfo}
+            canDraw={canDraw}
+            setCanDraw={setCanDraw}  
           /> </RoomContext.Provider>} />
         </Routes>
       </Suspense>

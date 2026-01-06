@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import connectDB from "./config/connectDB";
 import { setupSwagger } from "./config/swagger";
-import { createServer } from "./utils/createServer"
+import { createServer } from "./server/createServer"
 
 dotenv.config();
 connectDB();

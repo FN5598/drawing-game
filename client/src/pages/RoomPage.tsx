@@ -1,8 +1,7 @@
 import { ChatComponent } from "../canvasComponents/ChatComponent"
 import { Socket } from "socket.io-client";
-import { useEffect, useContext, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { RoomInfo } from "../App";
-import { RoomContext } from "../Contexts/RoomContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { CurrentPlayersComponent } from "../canvasComponents/CurrentPlayersComponent";
 import { RoomCreationComponent } from "../components/RoomCreationComponent";
@@ -12,25 +11,23 @@ type RoomPageProps = {
     socket: Socket;
     roomInfo: RoomInfo;
     setRoomInfo: React.Dispatch<React.SetStateAction<RoomInfo>>;
+    canDraw: boolean;
+    setCanDraw: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-function RoomPage({ socket, roomInfo, setRoomInfo }: RoomPageProps) {
+function RoomPage({ socket, roomInfo, setRoomInfo, canDraw, setCanDraw }: RoomPageProps) {
 
     const username = localStorage.getItem("username");
     const navigate = useNavigate();
     const { roomId } = useParams<{ roomId: string }>();
     const hasJoinedRef = useRef(false);
 
-    const ctx = useContext(RoomContext);
-    if (!ctx) throw new Error("RoomContext not found");
-    const { canType, setCanType } = ctx;
-
     useEffect(() => {
         const handleRoomInfo = ({ roomId, members, currentDrawerId, turnEndsAt }: RoomInfo) => {
             setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt });
         };
 
-        setCanType(true);
+        setCanDraw(false);
 
         socket.on("room-info", handleRoomInfo);
 
@@ -42,7 +39,7 @@ function RoomPage({ socket, roomInfo, setRoomInfo }: RoomPageProps) {
             socket.off("room-info", handleRoomInfo);
             socket.off("game-started");
         }
-    }, [setCanType, navigate, socket, setRoomInfo, roomInfo])
+    }, [setCanDraw, navigate, socket, setRoomInfo, roomInfo])
 
     useEffect(() => {
         if (!roomId || hasJoinedRef.current) return;
@@ -67,7 +64,7 @@ function RoomPage({ socket, roomInfo, setRoomInfo }: RoomPageProps) {
 
                 <RoomCreationComponent socket={socket} setRoomInfo={setRoomInfo} />
 
-                <ChatComponent socket={socket} canType={canType} roomInfo={roomInfo} />
+                <ChatComponent socket={socket} canDraw={canDraw} roomInfo={roomInfo} />
             </div>
             <div className="flex flex-col md:flex-row mt-12 items-center justify-center gap-6 md:gap-12">
                 {/* Room Link Section */}

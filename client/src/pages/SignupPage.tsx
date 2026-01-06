@@ -38,7 +38,7 @@ function SignupPage() {
             if (response.data.success === true) {
                 toast.success(`${response.data.message}`, {
                     position: "top-center",
-                    autoClose: 5000,
+                    autoClose: 500,
                     hideProgressBar: false,
                     closeOnClick: false,
                     pauseOnHover: true,
@@ -52,7 +52,7 @@ function SignupPage() {
             if (axios.isAxiosError(err)) {
                 toast.warning(`${err.response?.data.message}`, {
                     position: "top-center",
-                    autoClose: 5000,
+                    autoClose: 500,
                     hideProgressBar: false,
                     closeOnClick: false,
                     pauseOnHover: true,
@@ -71,7 +71,7 @@ function SignupPage() {
         if (verifiedPassword !== password) {
             toast.warning("Password fields must match!", {
                 position: "top-center",
-                autoClose: 5000,
+                autoClose: 500,
                 hideProgressBar: false,
                 closeOnClick: false,
                 pauseOnHover: true,

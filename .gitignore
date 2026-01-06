@@ -7,6 +7,7 @@ pnpm-debug.log*
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+server/coverage
 
 # Environment variables
 .env

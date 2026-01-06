@@ -18,20 +18,19 @@ type CanvasPageProps = {
     setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoading}: CanvasPageProps) {
+function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoading }: CanvasPageProps) {
     const navigate = useNavigate();
     const [wordToGuess, setWordToGuess] = useState<string>('');
     const [isGuessed, setIsGuessed] = useState(false);
     const [timeLeft, setTimeLeft] = useState<number | "Loading ...">("Loading ...");
-
     const ctx = useContext(RoomContext);
     if (!ctx) throw new Error("RoomContext not found");
-    const { canType, setCanType } = ctx;
+    const { setCanType } = ctx;
 
     const theme = localStorage.getItem("isLightTheme");
     const username = localStorage.getItem("username");
     const joined = localStorage.getItem("joined") === "true";
-
+    const roomId = localStorage.getItem("roomId");
 
     useEffect(() => {
         const handleBeforeUnload = () => {
@@ -49,14 +48,15 @@ function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoa
     }, [socket, joined]);
 
     useEffect(() => {
-        const handleRoomInfo = ({ roomId, members, currentDrawerId, turnEndsAt }: RoomInfo) => {
+        function handleRoomInfo({ roomId, members, currentDrawerId, turnEndsAt }: RoomInfo) {
             setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt });
+            console.log("got room info client");
         };
 
         function handleLeaveRoom() {
             toast.info("You have left the room.", {
                 position: "top-center",
-                autoClose: 5000,
+                autoClose: 500,
                 hideProgressBar: false,
                 closeOnClick: false,
                 pauseOnHover: true,
@@ -78,7 +78,7 @@ function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoa
             navigate("/");
             toast.info("Left the room! Not enough players to continue the game", {
                 position: "top-center",
-                autoClose: 5000,
+                autoClose: 500,
                 hideProgressBar: false,
                 closeOnClick: false,
                 pauseOnHover: true,
@@ -90,16 +90,6 @@ function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoa
 
         function handleAllGuessed() {
             setIsGuessed(false);
-            toast.info("All players guessed! Drawing next word", {
-                position: "top-center",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: false,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: `${theme}`
-            })
         }
 
         socket.on("left-room", handleLeaveRoom);
@@ -120,10 +110,12 @@ function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoa
     useEffect(() => {
         socket.emit("make-word");
 
-        socket.emit("get-room-info");
+        if (joined) {
+            socket.emit("get-room-info", roomId);
+        }
 
         setLoading(false);
-    }, [socket, setLoading]);
+    }, [socket, setLoading, roomId, joined]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -134,15 +126,15 @@ function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoa
 
             setTimeLeft(Math.floor(secondsLeft));
 
-            if (secondsLeft <= 0) {
+            if (secondsLeft <= 0 && joined) {
                 setIsGuessed(false);
-                socket.emit("get-room-info");
+                socket.emit("get-room-info", roomId);
                 socket.emit("next-player");
             }
         }, 250);
 
         return () => clearInterval(interval);
-    }, [roomInfo.turnEndsAt, socket]);
+    }, [roomInfo.turnEndsAt, socket, roomId, joined]);
 
     function handleLeave() {
         socket.emit("message", { msg: `has left the game`, username });
@@ -181,13 +173,13 @@ function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoa
                     wordToGuess={wordToGuess}
                     setIsGuessed={setIsGuessed}
                     setCanDraw={setCanDraw}
-                    canType={canType}
                     setCanType={setCanType}
                     roomInfo={roomInfo}
+                    canDraw={canDraw}
                 />
             </div>
         </div>
     );
-} 
+}
 
 export default CanvasPage

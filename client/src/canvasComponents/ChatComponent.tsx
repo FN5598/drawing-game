@@ -7,13 +7,13 @@ type ChatComponentProps = {
     wordToGuess?: string;
     setIsGuessed?: React.Dispatch<React.SetStateAction<boolean>>;
     setCanDraw?: React.Dispatch<React.SetStateAction<boolean>>;
-    canType: boolean;
     setCanType?: React.Dispatch<React.SetStateAction<boolean>>;
+    canDraw: boolean;
     roomInfo: RoomInfo;
 }
 
 
-export function ChatComponent({ socket, wordToGuess, setIsGuessed, setCanDraw, canType, setCanType, roomInfo }: ChatComponentProps) {
+export function ChatComponent({ socket, wordToGuess, setIsGuessed, setCanDraw, setCanType, roomInfo, canDraw }: ChatComponentProps) {
     const username = localStorage.getItem("username") || "Anonymous";
     const theme = localStorage.getItem("isLightTheme");
 
@@ -72,21 +72,25 @@ export function ChatComponent({ socket, wordToGuess, setIsGuessed, setCanDraw, c
                 ))}
             </div>
 
-            <div
-                className="bg-bg p-2 rounded-2xl overflow-x-clip relative">
-                <textarea
-                    disabled={!canType}
-                    className="w-full pt-1 pr-15 rounded resize-none overflow-hidden text-text"
-                    rows={1}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleSend}
-                    placeholder={canType ? "Type your message" : "Cannot type while drawing"}
-                />
-                <button
-                    className="absolute top-3 right-3 cursor-pointer"
-                    type="submit">Submit</button>
-            </div>
+            {!canDraw ? (
+                <div
+                    className="bg-bg p-2 rounded-2xl overflow-x-clip relative">
+                    <textarea
+                        className="w-full pt-1 pr-15 rounded resize-none overflow-hidden text-text"
+                        rows={1}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleSend}
+                        placeholder={"Type your message"}
+                    />
+                    <span
+                        className="absolute top-3 right-3"
+                    >{input.length}</span>
+                </div>) : (
+                    <div className="bg-bg p-2 rounded-2xl overflow-x-clip relative">
+                        <p className="p-1 text-text-muted">Cannot type while drawing</p>
+                    </div>
+                )}
         </div>
     )
 }
