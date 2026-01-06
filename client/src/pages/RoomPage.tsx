@@ -23,8 +23,8 @@ function RoomPage({ socket, roomInfo, setRoomInfo, canDraw, setCanDraw }: RoomPa
     const hasJoinedRef = useRef(false);
 
     useEffect(() => {
-        const handleRoomInfo = ({ roomId, members, currentDrawerId, turnEndsAt }: RoomInfo) => {
-            setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt });
+        const handleRoomInfo = ({ roomId, members, currentDrawerId, turnEndsAt, turnTime, maxPlayers }: RoomInfo) => {
+            setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt, turnTime, maxPlayers });
         };
 
         setCanDraw(false);

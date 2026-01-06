@@ -71,12 +71,12 @@ input {
 }
 
 .light {
-    --text: hsl(300 0% 95%);
-    --text-muted: hsl(300 0% 69%);
+    --text: hsl(300 0% 0%);
+    --text-muted: hsl(300 0% 20%);
 
     --bg-canvas: hsl(0 0% 58%);
 
-    --bg: hsl(300 0% 4%);
+    --bg: hsl(300 0% 40%);
     --bg-dark: hsl(336 0% 1%);
     --bg-light: hsl(300 0% 100%);
 

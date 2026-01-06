@@ -10,6 +10,8 @@ export type RoomInfo = {
   members?: { id: string, username: string }[]
   currentDrawerId?: string;
   turnEndsAt: number | "Loading ...";
+  turnTime: number | "Loading ...";
+  maxPlayers: number | "Loading ...";
 }
 
 const socket: Socket = io(import.meta.env.VITE_API_URL, {
@@ -29,7 +31,9 @@ function App() {
   const [canType, setCanType] = useState(true);
   const [roomInfo, setRoomInfo] = useState<RoomInfo>({
     roomId: "Loading ...",
-    turnEndsAt: "Loading ..."
+    turnEndsAt: "Loading ...",
+    turnTime: "Loading ...",
+    maxPlayers: "Loading ..."
   });
 
   useEffect(() => {
@@ -95,7 +99,7 @@ function App() {
             roomInfo={roomInfo}
             setRoomInfo={setRoomInfo}
             canDraw={canDraw}
-            setCanDraw={setCanDraw}  
+            setCanDraw={setCanDraw}
           /> </RoomContext.Provider>} />
         </Routes>
       </Suspense>

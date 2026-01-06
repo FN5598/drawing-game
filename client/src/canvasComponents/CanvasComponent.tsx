@@ -38,6 +38,7 @@ export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed
     const [lineWidth, setLineWidth] = useState(3);
     const [drawing, setDrawing] = useState(false);
     const [color, setColor] = useState("#000000");
+    const currentStrokeRef = useRef<string | null>(null);
 
     const lastPosRef = useRef<{ x: number, y: number } | null>(null);
     const lastEmitRef = useRef(0);
@@ -48,9 +49,7 @@ export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed
     const roomId = localStorage.getItem("roomId") || undefined;
 
     useEffect(() => {
-
         function handleDraw(data: DrawData) {
-
             const canvas = canvasRef.current;
             const ctx = canvas?.getContext("2d");
             if (!ctx) return;
@@ -99,7 +98,8 @@ export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed
         socket.on("draw", handleDraw);
         socket.on("erase-canvas", handleErasePage);
         socket.on("word-to-guess", handleWord);
-        socket.on("current-drawing", handleSendDrawingData)
+        socket.on("current-drawing", handleSendDrawingData);
+        socket.on("redraw-canvas", handleSendDrawingData);
 
         return () => {
             socket.off("draw", handleDraw);
@@ -172,7 +172,9 @@ export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed
                 ctx.stroke();
                 ctx.globalCompositeOperation = "source-over";
             }
+
             socket.emit("draw", {
+                strokeId: currentStrokeRef.current,
                 x1: lastPosRef.current.x,
                 y1: lastPosRef.current.y,
                 x2: pos.x,
@@ -187,6 +189,7 @@ export function CanvasComponent({ socket, wordToGuess, setWordToGuess, isGuessed
 
     function handleMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
         setDrawing(true);
+        currentStrokeRef.current = crypto.randomUUID();
         const pos = getCursorPos(e);
         if (!pos) return;
         lastPosRef.current = pos;

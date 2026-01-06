@@ -2,13 +2,6 @@ import { NavLink } from "react-router-dom";
 
 export function HeaderComponent() {
 
-    function changeTheme() {
-        let currentTheme = '';
-        const theme = document.documentElement.classList.toggle("light");
-        if (theme == true) currentTheme = "light"
-        localStorage.setItem("isLightTheme", currentTheme || "dark");
-    }
-
     return (
         <nav className="flex flex-row justify-between pl-20 pr-20 bg-bg-dark text-white font-bangers font-bold p-4 items-center">
             <p>Task Manager</p>
@@ -16,12 +9,6 @@ export function HeaderComponent() {
                 <NavLink to='/'>Home Page</NavLink>
                 <NavLink to='/login'>Login</NavLink>
             </div>
-            <button
-                className="cursor-pointer border-border-color border p-2 rounded-md bg-bg w-23 text-text"
-                onClick={changeTheme}
-            >
-                Switch Theme
-            </button>
         </nav>
     );
 }

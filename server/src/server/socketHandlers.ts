@@ -137,6 +137,24 @@ export function socketHandlers(io: Server) {
             socketUtils.leaveRoom(io, roomId, socket)
         });
 
+        socket.on("delete-last-draw", (roomId: string) => {
+            if (!roomId) throw Error("Not all data passed");
+            const room = socketUtils.rooms.get(roomId);
+            if (!room) return;
+            if (room.roomDrawing.length >= 1) {
+                const lastEl = room.roomDrawing[room.roomDrawing.length - 1];
+                const lastStrokeId = lastEl?.strokeId;
+                if (!lastStrokeId) return;
+                while (room.roomDrawing.length && room.roomDrawing[room.roomDrawing.length - 1]?.strokeId === lastStrokeId) {
+                    room.roomDrawing.pop();
+                }
+                io.to(roomId).emit("erase-canvas");
+                io.to(roomId).emit("redraw-canvas", { drawingData: room.roomDrawing });
+                socketUtils.emitRoomInfo(io, roomId);
+            }
+            return;
+        })
+
         socket.on("disconnect", () => {
             const roomId = socket.data.roomId;
             if (roomId) {

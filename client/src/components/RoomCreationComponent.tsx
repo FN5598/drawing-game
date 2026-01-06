@@ -20,8 +20,8 @@ export function RoomCreationComponent({ socket, setRoomInfo }: RoomCreationCompo
 
     useEffect(() => {
 
-        const handleRoomInfo = ({ roomId, members, currentDrawerId, turnEndsAt }: RoomInfo) => {
-            setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt });
+        const handleRoomInfo = ({ roomId, members, currentDrawerId, turnEndsAt, turnTime, maxPlayers }: RoomInfo) => {
+            setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt, turnTime, maxPlayers });
         };
 
         function handleLeaveRoom() {

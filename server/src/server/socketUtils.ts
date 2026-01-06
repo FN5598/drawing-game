@@ -62,7 +62,9 @@ export function emitRoomInfo(io: Server, roomId: string) {
         roomId,
         members,
         currentDrawerId: currentDrawerId?.id,
-        turnEndsAt: room.turnEndsAt
+        turnEndsAt: room.turnEndsAt,
+        turnTime: room.turnTime,
+        maxPlayers: room.maxPlayers
     });
 }
 

@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import settingsIcon from "../assets/settings.png";
 import { RoomInfo } from "../App";
 import { CurrentPlayersComponent } from "../canvasComponents/CurrentPlayersComponent";
+import { SettingsModal } from "../modals/SettingsModal";
 
 type CanvasPageProps = {
     socket: Socket;
@@ -23,6 +24,7 @@ function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoa
     const [wordToGuess, setWordToGuess] = useState<string>('');
     const [isGuessed, setIsGuessed] = useState(false);
     const [timeLeft, setTimeLeft] = useState<number | "Loading ...">("Loading ...");
+    const [settingsOpen, setSettingsOpen] = useState(false);
     const ctx = useContext(RoomContext);
     if (!ctx) throw new Error("RoomContext not found");
     const { setCanType } = ctx;
@@ -48,9 +50,8 @@ function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoa
     }, [socket, joined]);
 
     useEffect(() => {
-        function handleRoomInfo({ roomId, members, currentDrawerId, turnEndsAt }: RoomInfo) {
-            setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt });
-            console.log("got room info client");
+        function handleRoomInfo({ roomId, members, currentDrawerId, turnEndsAt, turnTime, maxPlayers }: RoomInfo) {
+            setRoomInfo({ roomId, members, currentDrawerId, turnEndsAt, turnTime, maxPlayers });
         };
 
         function handleLeaveRoom() {
@@ -141,8 +142,22 @@ function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoa
         socket.emit("leave-room");
     }
 
+    useEffect(() => {
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.ctrlKey && e.key === "z") {
+                e.preventDefault();
+                socket.emit("delete-last-draw", roomInfo.roomId);
+            }
+        }
+
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    })
+
     return (
         <div className="flex flex-row gap-5 bg-bg-canvas h-screen justify-center">
+
+            {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} roomInfo={roomInfo} />}
 
             <CurrentPlayersComponent roomInfo={roomInfo} />
 
@@ -164,7 +179,9 @@ function CanvasPage({ socket, roomInfo, setRoomInfo, setCanDraw, canDraw, setLoa
                     <div className="text-text bg-bg p-2 rounded">
                         <p>Members: {roomInfo?.members?.length}</p>
                     </div>
-                    <div className="text-text bg-bg p-2 rounded cursor-pointer">
+                    <div
+                        onClick={() => { setSettingsOpen(true) }}
+                        className="text-text bg-bg p-2 rounded cursor-pointer">
                         <img src={settingsIcon} />
                     </div>
                 </div>
