@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: drawing-game
+    env: node
+    plan: free
+    repo: https://github.com/FN5598/drawing-game
+    branch: main
+    buildCommand: cd server && npm run build
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ACCESS_TOKEN
+        fromSecret: ACCESS_TOKEN
+      - key: ACCESS_TOKEN_EXPIRE
+        fromSecret: ACCESS_TOKEN_EXPIRE
+      - key: CLIENT_URL
+        fromSecret: CLIENT_URL
+      - key: MONGO_URI
+        fromSecret: MONGO_URI
+      - key: PORT
+        fromSecret: PORT
+      - key: REFRESH_TOKEN
+        fromSecret: REFRESH_TOKEN
+      - key: REFRESH_TOKEN_EXPIRE
+        fromSecret: REFRESH_TOKEN_EXPIRE

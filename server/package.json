@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "postinstall": "npm run build",
-    "test": "jest --verbose --coverage" ,
+    "test": "jest --verbose --config jest.config.js" ,
     "test:watch": "jest --watch",
     "test:detect": "jest --detectOpenHandles"
   },
